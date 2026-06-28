@@ -16,8 +16,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 PORT = 8765
 DASHBOARD_HTML = Path(__file__).parent / "dashboard.html"
-GENE_DB = Path(__file__).parent / "outreach" / "gene_map.db"
-AUDIT_DB = Path("/opt/data/vault/.research_audit.db")
+GENE_DB = Path(__file__).parent / "gene_map.db"
+AUDIT_DB = Path(__file__).parent / ".research_audit.db"
 
 
 def read_json_safe(p: Path) -> dict:
