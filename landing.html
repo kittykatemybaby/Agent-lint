@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agent-lint — Predict before you break production</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090a; --panel: #0f1011; --surface: #191a1b;
+  --text: #f7f8f8; --text2: #d0d6e0; --text3: #8a8f98;
+  --accent: #5e6ad2; --accent2: #7170ff; --border: rgba(255,255,255,0.08);
+  --green: #27a644; --red: #e5484d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); font-feature-settings: 'cv01','ss03'; }
+section { padding: 80px 24px; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 56px; font-weight: 590; letter-spacing: -1.4px; line-height: 1.05; margin-bottom: 20px; }
+h1 span { color: var(--accent2); }
+h2 { font-size: 32px; font-weight: 590; letter-spacing: -0.7px; margin-bottom: 16px; }
+p { font-size: 18px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 14px; background: var(--surface); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); }
+pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; margin: 20px 0; }
+pre code { background: none; border: none; padding: 0; }
+.btn { display: inline-block; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 510; padding: 10px 24px; border-radius: 6px; text-decoration: none; cursor: pointer; border: 1px solid var(--border); background: var(--accent); color: #fff; margin-right: 12px; }
+.btn.ghost { background: rgba(255,255,255,0.02); color: var(--text2); }
+.btn:hover { background: var(--accent2); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.card h3 { font-size: 16px; font-weight: 590; margin-bottom: 8px; }
+.card p { font-size: 14px; color: var(--text3); line-height: 1.5; }
+table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+th { color: var(--text3); font-weight: 510; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+td { color: var(--text2); }
+td.check { color: var(--green); }
+td.cross { color: var(--red); }
+td.star { color: var(--accent2); font-weight: 590; }
+.footer { text-align: center; padding: 40px; color: var(--text3); font-size: 14px; }
+@media(max-width:768px){ h1 { font-size: 36px; } .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<section style="padding-top:120px; text-align:center;">
+  <h1><span>Predict</span> before you break production.</h1>
+  <p style="font-size:20px;">One silent agent failure costs more than a year of monitoring. <code>agent-lint</code> catches errors before they happen.</p>
+  <div style="margin-top:32px;">
+    <a href="https://github.com/kittykatemybaby/Agent-lint" class="btn">GitHub</a>
+    <a href="https://github.com/kittykatemybaby/Agent-lint#install" class="btn ghost">Clone → ./agent-lint check</a>
+  </div>
+</section>
+
+<section>
+  <pre><code>$ agent-lint check "DELETE FROM users" --tool sql --rows 5000
+{
+  "verdict": "REJECT",
+  "risk_score": 0.7,
+  "patterns_detected": ["Impact (5000) exceeds max (1000)"]
+}
+
+$ agent-lint genes
+Error Gene Map:
+  DeepSeek API timeout → retry (3s, max 2)
+  Rate limit 429 → backoff (60s)</code></pre>
+</section>
+
+<section>
+  <h2>What it does</h2>
+  <div class="grid">
+    <div class="card"><h3>Check</h3><p>Risk-score an agent action before it runs. APPROVE or REJECT in milliseconds.</p></div>
+    <div class="card"><h3>Predict</h3><p>Blind-predict outcome before execution. Compare with actual. Evolve.</p></div>
+    <div class="card"><h3>Audit</h3><p>Scan execution traces. Find errors, warnings, slow steps.</p></div>
+    <div class="card"><h3>Gene Map</h3><p>Error memory. Same error, 1ms lookup, $0 re-diagnosis.</p></div>
+    <div class="card"><h3>Dashboard</h3><p>System state. Pending actions. Drift visualization. Live.</p></div>
+    <div class="card"><h3>Evolve</h3><p>Observations lifecycle. Promote what works, archive what doesn't.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Why</h2>
+  <p>987+ repos on GitHub are building agent eval frameworks. Patronus just raised $50M for agent simulation. But <strong>nobody stops the agent BEFORE it breaks production.</strong></p>
+  <p>agent-lint does.</p>
+</section>
+
+<section>
+  <h2>vs Competitors</h2>
+  <table>
+    <tr><th>Product</th><th>Traces</th><th>Guards</th><th>Predicts</th><th>Price</th></tr>
+    <tr><td>LangSmith</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td>$39/seat</td></tr>
+    <tr><td>Arize</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td>Free</td></tr>
+    <tr><td>Braintrust</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td>Free</td></tr>
+    <tr><td>Lakera</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td>Enterprise</td></tr>
+    <tr><td><strong>agent-lint</strong></td><td class="check">✓</td><td class="check">✓</td><td class="star">✓</td><td><strong>Free</strong></td></tr>
+  </table>
+</section>
+
+<section style="text-align:center;">
+  <h2>Zero dependencies. One command.</h2>
+  <pre><code>git clone https://github.com/kittykatemybaby/Agent-lint.git
+cd Agent-lint && bash demo.sh</code></pre>
+  <a href="https://github.com/kittykatemybaby/Agent-lint" class="btn" style="margin-top:16px;">View on GitHub</a>
+</section>
+
+<div class="footer">Built by <a href="https://x.com/KittyKatemybaby" style="color:var(--accent2);">Kitty Kate</a> · MIT · 2026</div>
+</body>
+</html>
