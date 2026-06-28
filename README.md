@@ -1,31 +1,30 @@
 # agent-lint
 
-**Your AI agent is burning money and you don't know it. ** `agent-lint` catches errors before they happen.
-
-One silent agent failure costs more than a year of monitoring. `agent-lint` is the fuse.
+**Predict before you break production.** One silent agent failure costs more than a year of monitoring.
 
 ```bash
-pip install agent-lint
-agent-lint check "DELETE users WHERE inactive > 30d" --tool sql --rows 5000
+git clone https://github.com/kittykatemybaby/agent-lint.git
+cd agent-lint
+./agent-lint check "DELETE users WHERE inactive > 30d" --tool sql --rows 5000
 # → REJECT (risk 0.7, impact exceeds max)
 ```
 
 ---
 
-## What it does
+## What
 
 | Command | Does |
 |---------|------|
-| `agent-lint check` | Risk-score an agent action before it runs |
-| `agent-lint genes` | Show known error patterns and fixes |
-| `agent-lint audit` | Audit an execution trace |
-| `agent-lint predict` | Predict outcome before execution |
+| `check "action" --tool sql --rows N` | Risk-score before execution |
+| `genes` | Known error patterns + fixes |
+| `audit trace.json` | Scan execution trace for issues |
+| `predict action.json` | Predict outcome before running |
 
 ## Why
 
-987+ repos on GitHub are building agent eval frameworks. General Intuition raised $2.3B for AI agents. But nobody tells you BEFORE the agent breaks production.
+987+ repos on GitHub are building agent eval frameworks. Patronus just raised $50M for agent simulation. But **nobody stops the agent BEFORE it breaks production.**
 
-`agent-lint` does.
+agent-lint does.
 
 ## Dashboard
 
@@ -34,31 +33,43 @@ python3 dashboard_server.py
 # → http://localhost:8765
 ```
 
-Linear dark theme. System state, pending actions, drift visualization. Live data from your SQLite databases.
+Linear dark theme. System state panel. Pending action queue with Approve/Reject/Simulate. Real-time drift visualization (p5.js).
 
-## Engine
+## Engine (5 modules, zero deps)
 
 | Module | Does |
 |--------|------|
-| `stop_conditions.py` | Every action has success criteria + halt conditions |
-| `gene_map.py` | Error memory — same error never diagnosed twice |
-| `prediction_dataset.py` | Blind prediction before action, retro after |
-| `cross_audit.py` | Read-only audit by another agent |
+| `stop_conditions.py` | Every action declares success + halt + escalate |
+| `gene_map.py` | Error memory — same error, 1ms lookup, $0 re-diagnosis |
+| `prediction_dataset.py` | Blind-predict before action, retro after |
+| `cross_audit.py` | Second agent audits first agent's output |
 | `observation_lifecycle.py` | Promote what works, archive what doesn't |
 
 ## Competitors
 
-| Product | Traces | Guards | Predicts | Price |
-|---------|--------|--------|----------|-------|
+| Product | Traces | Guards | **Predicts** | Price |
+|---------|--------|--------|-------------|-------|
 | LangSmith | ✅ | ❌ | ❌ | $39/seat |
-| Arize | ✅ | ❌ | ❌ | Free-$ |
-| Braintrust | ✅ | ❌ | ❌ | Free-$ |
-| Guardrails AI | ❌ | ✅ | ❌ | Free |
+| Arize | ✅ | ❌ | ❌ | Free |
+| Braintrust | ✅ | ❌ | ❌ | Free |
 | Lakera | ❌ | ✅ | ❌ | Enterprise |
-| **agent-lint** | ✅ | ✅ | ✅ | Free OSS |
+| **agent-lint** | ✅ | ✅ | **✅** | Free |
 
-The only one that predicts before executing.
+**Only one that predicts before executing.**
 
 ---
 
-Skipped: pip package (needs PyPI account), cloud dashboard, SSO. Add when: first 100 GitHub stars.
+## Install
+
+```bash
+git clone https://github.com/kittykatemybaby/agent-lint.git
+cd agent-lint
+chmod +x agent-lint
+./agent-lint check "your action here" --tool api_call
+```
+
+Python 3.10+. Zero external dependencies.
+
+---
+
+Built by Kitty Kate · [@KittyKatemybaby](https://x.com/KittyKatemybaby) · MIT
