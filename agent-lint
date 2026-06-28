@@ -1,0 +1,232 @@
+#!/usr/bin/env python3
+"""agent-lint — AI Agent safety and reliability CLI.
+
+Check agent actions before they execute. Like ESLint for code,
+but for AI agent behavior: stop conditions, error memory,
+drift detection, outcome prediction.
+
+Usage:
+  agent-lint check "SQL_QUERY on production_db" --tool sql --rows 1000
+  agent-lint check "DELETE users WHERE inactive > 30d" --tool sql --rows 5000
+  agent-lint genes                          # show known error patterns
+  agent-lint audit /path/to/trace.json      # audit an execution trace
+  agent-lint predict /path/to/action.json   # predict outcome before execution
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+# ── Risk Engine ───────────────────────────────────────────────────
+
+TOOL_SPECS = {
+    "sql": {
+        "reversible": False,
+        "max_impact": 1000,  # max rows affected without escalation
+        "risk_base": 0.3,
+    },
+    "http_post": {
+        "reversible": False,
+        "max_impact": 100,
+        "risk_base": 0.4,
+    },
+    "email_send": {
+        "reversible": False,
+        "max_impact": 500,
+        "risk_base": 0.2,
+    },
+    "file_write": {
+        "reversible": True,
+        "max_impact": 10,
+        "risk_base": 0.1,
+    },
+    "api_call": {
+        "reversible": True,
+        "max_impact": 100,
+        "risk_base": 0.2,
+    },
+}
+
+KNOWN_PATTERNS = {
+    "bulk_delete": {"risk_bump": 0.4, "reason": "Bulk deletion without WHERE clause"},
+    "production_write": {"risk_bump": 0.3, "reason": "Write operation on production database"},
+    "external_api_new": {"risk_bump": 0.2, "reason": "Call to previously unseen API endpoint"},
+    "user_data_access": {"risk_bump": 0.25, "reason": "Access to personally identifiable data"},
+    "rate_limit_near": {"risk_bump": 0.15, "reason": "Approaching API rate limit"},
+}
+
+ERROR_GENES = {
+    "DeepSeek API timeout": {"fix": "retry", "delay": 3, "max_retries": 2},
+    "Rate limit 429": {"fix": "backoff", "delay": 60, "max_retries": 1},
+    "Database connection refused": {"fix": "retry", "delay": 5, "max_retries": 2},
+    "Permission denied": {"fix": "escalate", "reason": "Requires human authorization"},
+    "Schema validation failed": {"fix": "skip", "reason": "Invalid input, skip this action"},
+}
+
+
+def classify_risk(action: str, tool: str, params: dict) -> dict:
+    """Calculate risk score and recommendation for an agent action."""
+    spec = TOOL_SPECS.get(tool, {"reversible": False, "max_impact": 10, "risk_base": 0.3})
+    risk = spec["risk_base"]
+
+    # Check patterns
+    patterns_matched = []
+    for pattern_name, pattern in KNOWN_PATTERNS.items():
+        if pattern_name.replace("_", " ") in action.lower():
+            risk += pattern["risk_bump"]
+            patterns_matched.append(pattern["reason"])
+
+    # Impact check
+    impact = params.get("rows", params.get("users", params.get("count", 0)))
+    if impact > spec["max_impact"]:
+        risk += 0.3
+        patterns_matched.append(f"Impact ({impact}) exceeds max ({spec['max_impact']})")
+
+    # Reversibility
+    if not spec["reversible"]:
+        risk += 0.1
+
+    risk = min(risk, 1.0)
+
+    # Decision
+    if risk >= 0.7:
+        verdict = "REJECT"
+    elif risk >= 0.4:
+        verdict = "ESCALATE"
+    else:
+        verdict = "APPROVE"
+
+    return {
+        "action": action[:100],
+        "tool": tool,
+        "risk_score": round(risk, 2),
+        "verdict": verdict,
+        "patterns_detected": patterns_matched,
+        "reversible": spec.get("reversible", False),
+    }
+
+
+def show_genes():
+    """Display known error patterns and their fixes."""
+    print("Error Gene Map")
+    print("==============")
+    for error, fix in ERROR_GENES.items():
+        print(f"  {error}")
+        print(f"    → {fix['fix']}", end="")
+        if fix.get("delay"):
+            print(f" (delay: {fix['delay']}s, retries: {fix.get('max_retries', 1)})", end="")
+        if fix.get("reason"):
+            print(f" ({fix['reason']})", end="")
+        print()
+
+
+def audit_trace(trace_path: str) -> dict:
+    """Audit an execution trace file."""
+    trace = json.loads(Path(trace_path).read_text())
+    findings = []
+
+    for i, step in enumerate(trace.get("steps", [])):
+        action = step.get("action", "")
+        tool = step.get("tool", "unknown")
+        duration = step.get("duration_ms", 0)
+        error = step.get("error", "")
+
+        if error:
+            findings.append({
+                "step": i,
+                "severity": "error",
+                "description": f"Step {i} failed: {error[:100]}",
+            })
+
+        if duration > 5000:
+            findings.append({
+                "step": i,
+                "severity": "warning",
+                "description": f"Step {i} took {duration}ms (slow)",
+            })
+
+    return {
+        "file": trace_path,
+        "steps": len(trace.get("steps", [])),
+        "errors": len([f for f in findings if f["severity"] == "error"]),
+        "warnings": len([f for f in findings if f["severity"] == "warning"]),
+        "findings": findings,
+    }
+
+
+def predict_outcome(action_path: str) -> dict:
+    """Blind prediction before execution."""
+    action_data = json.loads(Path(action_path).read_text())
+    risk = classify_risk(
+        action_data.get("action", ""),
+        action_data.get("tool", "unknown"),
+        action_data.get("params", {}),
+    )
+
+    if risk["risk_score"] >= 0.7:
+        predicted = "failure"
+        confidence = risk["risk_score"]
+    elif risk["risk_score"] >= 0.4:
+        predicted = "needs_review"
+        confidence = 0.6
+    else:
+        predicted = "success"
+        confidence = 1.0 - risk["risk_score"]
+
+    return {
+        "predicted_outcome": predicted,
+        "confidence": round(confidence, 2),
+        "risk_assessment": risk,
+    }
+
+
+# ── CLI ───────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="agent-lint — AI Agent safety and reliability CLI"
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    # check
+    check_parser = sub.add_parser("check", help="Check an agent action for risk")
+    check_parser.add_argument("action", help="Action description")
+    check_parser.add_argument("--tool", default="api_call", help="Tool type")
+    check_parser.add_argument("--rows", type=int, default=0, help="Rows/users affected")
+
+    # genes
+    sub.add_parser("genes", help="Show known error patterns")
+
+    # audit
+    audit_parser = sub.add_parser("audit", help="Audit an execution trace")
+    audit_parser.add_argument("path", help="Path to trace JSON")
+
+    # predict
+    predict_parser = sub.add_parser("predict", help="Predict outcome before execution")
+    predict_parser.add_argument("path", help="Path to action JSON")
+
+    args = parser.parse_args()
+
+    if args.command == "check":
+        result = classify_risk(args.action, args.tool, {"rows": args.rows})
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        sys.exit(0 if result["verdict"] == "APPROVE" else 1)
+
+    elif args.command == "genes":
+        show_genes()
+
+    elif args.command == "audit":
+        result = audit_trace(args.path)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+
+    elif args.command == "predict":
+        result = predict_outcome(args.path)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Control Platform — Kitty Kate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<style>
+:root {
+  --bg-deep: #08090a;
+  --bg-panel: #0f1011;
+  --bg-surface: #191a1b;
+  --bg-elevated: #23252a;
+  --text-primary: #f7f8f8;
+  --text-secondary: #d0d6e0;
+  --text-tertiary: #8a8f98;
+  --text-muted: #62666d;
+  --accent: #5e6ad2;
+  --accent-bright: #7170ff;
+  --accent-hover: #828fff;
+  --green: #27a644;
+  --red: #e5484d;
+  --amber: #f5a623;
+  --border-subtle: rgba(255,255,255,0.05);
+  --border-standard: rgba(255,255,255,0.08);
+  --radius: 8px;
+  --radius-sm: 6px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-feature-settings: 'cv01', 'ss03';
+  min-height: 100vh;
+}
+header {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { font-size: 15px; font-weight: 510; color: var(--text-primary); letter-spacing: -0.165px; }
+.logo span { color: var(--accent-bright); }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; }
+.status-dot.green { background: var(--green); }
+.status-dot.amber { background: var(--amber); }
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  padding: 24px;
+  max-width: 1400px; margin: 0 auto;
+}
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.panel.full { grid-column: 1 / -1; }
+.panel h2 {
+  font-size: 13px; font-weight: 510; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;
+}
+.panel h3 {
+  font-size: 20px; font-weight: 590; color: var(--text-primary);
+  letter-spacing: -0.24px; margin-bottom: 4px;
+}
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.metric {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+.metric .label { font-size: 12px; font-weight: 510; color: var(--text-muted); margin-bottom: 4px; }
+.metric .value { font-size: 24px; font-weight: 590; color: var(--text-primary); letter-spacing: -0.288px; }
+.metric .sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.metric.warn { border-color: rgba(245,166,35,0.3); }
+.metric.warn .value { color: var(--amber); }
+
+.action-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-standard);
+  border-radius: var(--radius-sm);
+  padding: 16px; margin-bottom: 12px;
+}
+.action-card .tool { 
+  font-size: 13px; font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-bright); margin-bottom: 6px;
+}
+.action-card .risk { font-size: 12px; display: inline-block; padding: 2px 8px; border-radius: 9999px; margin-bottom: 8px; }
+.risk.high { background: rgba(229,72,77,0.15); color: var(--red); border: 1px solid rgba(229,72,77,0.3); }
+.risk.medium { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+.risk.low { background: rgba(39,166,68,0.15); color: var(--green); border: 1px solid rgba(39,166,68,0.3); }
+.action-card .reason { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
+.action-btns { display: flex; gap: 8px; }
+.btn {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px; font-weight: 510; padding: 6px 14px;
+  border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--border-standard);
+  background: rgba(255,255,255,0.02); color: var(--text-secondary);
+}
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.danger { background: rgba(229,72,77,0.1); color: var(--red); border-color: rgba(229,72,77,0.3); }
+.btn:hover { background: rgba(255,255,255,0.05); }
+.btn.primary:hover { background: var(--accent-hover); }
+
+#drift-canvas { width: 100%; height: 260px; border-radius: var(--radius-sm); overflow: hidden; }
+
+.empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+
+.term-tutor {
+  border-bottom: 1px dashed var(--text-tertiary);
+  cursor: help; position: relative;
+}
+.term-tutor:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: 100%; left: 0;
+  background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--border-standard);
+  padding: 8px 12px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 400; white-space: nowrap; z-index: 10;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Agent <span>Control</span> Platform</div>
+  <div style="font-size:13px;color:var(--text-muted);">
+    <span class="status-dot green" id="health-dot"></span><span id="health-label">API Healthy</span> ·
+    <span style="color:var(--amber);margin-left:8px;">Drift: 0.42</span> ·
+    <span style="margin-left:8px;">Model: DeepSeek</span>
+  </div>
+</header>
+
+<main>
+  <!-- System State Panel -->
+  <div class="panel full">
+    <h2>System State</h2>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="label">Actions / 24h</div>
+        <div class="value" id="actions24">—</div>
+      </div>
+      <div class="metric">
+        <div class="label">Blocked</div>
+        <div class="value" id="blocked">—</div>
+      </div>
+      <div class="metric warn">
+        <div class="label"><span class="term-tutor" data-tip="KS test on behavior distribution vs baseline. Higher = more abnormal.">Drift Score</span></div>
+        <div class="value" id="drift">—</div>
+      </div>
+      <div class="metric">
+        <div class="label">Gene Map</div>
+        <div class="value" id="genes">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Panel -->
+  <div class="panel">
+    <h2>Pending Actions</h2>
+    <div id="action-list"></div>
+  </div>
+
+  <!-- Drift Visualization -->
+  <div class="panel">
+    <h2>
+      <span class="term-tutor" data-tip="Behavior distribution comparison. Red = current, Blue = baseline. Wider gap = more drift.">Behavior Drift</span>
+    </h2>
+    <div id="drift-canvas"></div>
+  </div>
+</main>
+
+<script>
+// Fetch live data from API
+fetch('/api/state').then(r=>r.json()).then(d=>{
+  document.getElementById('actions24').textContent = d.actions_24h;
+  document.getElementById('blocked').textContent = d.blocked;
+  document.getElementById('drift').textContent = d.drift_score;
+  document.getElementById('genes').textContent = d.gene_map_patterns;
+  document.getElementById('health-dot').className = 'status-dot ' + (d.api_health==='healthy'?'green':'amber');
+});
+fetch('/api/actions').then(r=>r.json()).then(actions=>{
+  const el = document.getElementById('action-list');
+  el.innerHTML = actions.map(a=>`
+    <div class="action-card">
+      <div class="tool">${a.tool} · ${a.target}</div>
+      <span class="risk ${a.risk_level}">${a.risk_level.toUpperCase()} · ${a.risk}</span>
+      <div class="reason">${a.reason}</div>
+      <div class="action-btns">
+        <button class="btn primary">Approve</button>
+        <button class="btn">Modify</button>
+        <button class="btn danger">Reject</button>
+        <button class="btn">Simulate</button>
+      </div>
+    </div>`).join('');
+});
+</script>
+const driftSketch = (p) => {
+  let t = 0;
+  p.setup = function() {
+    let c = p.createCanvas(640, 260);
+    c.parent('drift-canvas');
+    p.colorMode(p.HSB, 360, 100, 100, 100);
+  };
+  p.draw = function() {
+    p.background(15, 3, 10); // #191a1b in HSB
+    p.noFill();
+    t += 0.008;
+    
+    // Baseline distribution (blue)
+    p.stroke(220, 60, 80, 40);
+    p.strokeWeight(1.5);
+    p.beginShape();
+    for (let x = 0; x < p.width; x++) {
+      let baseline = p.map(p.noise(x * 0.005), 0, 1, 100, 220);
+      p.vertex(x, baseline + 20);
+    }
+    p.endShape();
+    
+    // Fill baseline
+    p.noStroke();
+    p.fill(220, 40, 60, 8);
+    p.beginShape();
+    p.vertex(0, p.height);
+    for (let x = 0; x < p.width; x++) {
+      let baseline = p.map(p.noise(x * 0.005), 0, 1, 100, 220);
+      p.vertex(x, baseline + 20);
+    }
+    p.vertex(p.width, p.height);
+    p.endShape(p.CLOSE);
+    
+    // Current distribution (red — drifted)
+    p.noFill();
+    p.stroke(0, 80, 90, 60);
+    p.strokeWeight(2);
+    p.beginShape();
+    for (let x = 0; x < p.width; x++) {
+      let drift = p.map(p.noise(x * 0.006 + t), 0, 1, 80, 240);
+      let spike = p.noise(x * 0.02) > 0.6 ? p.random(-15, 15) : 0;
+      p.vertex(x, drift + spike);
+    }
+    p.endShape();
+    
+    // Labels
+    p.textFont('JetBrains Mono');
+    p.textSize(10);
+    p.fill(0, 0, 40);
+    p.noStroke();
+    p.text('BASELINE', 10, 30);
+    p.fill(0, 80, 60);
+    p.text('CURRENT', 10, 45);
+    
+    // KS score indicator
+    p.fill(30, 80, 80, 30);
+    p.noStroke();
+    let ksX = p.map(0.42, 0, 1, 60, p.width - 60);
+    p.rect(ksX - 1, 20, 3, p.height - 40);
+    p.fill(30, 80, 80, 80);
+    p.textAlign(p.CENTER);
+    p.text('D_KS = 0.42', ksX, 15);
+  };
+};
+new p5(driftSketch);
+</script>
+</body>
+</html>
