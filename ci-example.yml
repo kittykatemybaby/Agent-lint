@@ -1,0 +1,31 @@
+name: agent-lint
+
+on:
+  pull_request:
+    paths:
+      - 'agent_actions/**'
+      - 'traces/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone agent-lint
+        run: git clone https://github.com/kittykatemybaby/Agent-lint.git /tmp/agent-lint
+
+      - name: Check agent actions
+        run: |
+          cd /tmp/agent-lint
+          chmod +x agent-lint
+          for f in $GITHUB_WORKSPACE/agent_actions/*.sql; do
+            echo "Checking $f"
+            ./agent-lint check "$(cat $f)" --tool sql --rows $(wc -l < $f)
+          done
+
+      - name: Audit traces
+        run: |
+          for f in $GITHUB_WORKSPACE/traces/*.json; do
+            /tmp/agent-lint/agent-lint audit $f
+          done
