@@ -46,6 +46,21 @@ TOOL_SPECS = {
         "max_impact": 100,
         "risk_base": 0.2,
     },
+    "http_get": {
+        "reversible": True,
+        "max_impact": 1000,
+        "risk_base": 0.1,
+    },
+    "http_delete": {
+        "reversible": False,
+        "max_impact": 10,
+        "risk_base": 0.5,
+    },
+    "shell_exec": {
+        "reversible": False,
+        "max_impact": 1,
+        "risk_base": 0.6,
+    },
 }
 
 KNOWN_PATTERNS = {
