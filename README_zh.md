@@ -174,3 +174,5 @@ pip install git+https://github.com/kittykatemybaby/Agent-lint.git
 ## License
 
 MIT。由 [Kitty Kate](https://x.com/KittyKatemybaby) 打造。
+
+[English](README.md)
