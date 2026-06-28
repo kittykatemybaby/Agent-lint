@@ -1,0 +1,21 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run agent-lint tests
+        run: |
+          chmod +x agent-lint
+          ./agent-lint check "Send weekly report" --tool email_send --rows 10
+          ./agent-lint check "DELETE FROM payments" --tool sql --rows 10000 || true
+          ./agent-lint genes
+          echo '{"action":"test","tool":"api_call","params":{}}' > test.json
+          ./agent-lint predict test.json
+          echo "All tests passed"
