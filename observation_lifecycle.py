@@ -270,24 +270,16 @@ def get_observation_history(obs_key: str) -> list[dict]:
 # ── Convenience: Seed pipeline observations ────────────────────────
 
 def seed_pipeline_observations():
-    """Register all current pipeline keywords and rules as observations."""
-    from outreach.signal_engine import HIGH_INTENT_KEYWORDS, MEDIUM_INTENT_KEYWORDS
-
-    for kw in HIGH_INTENT_KEYWORDS:
+    """Register default observations as candidates."""
+    # Generic signal keywords — replace with your domain
+    for kw in ["automation", "efficiency", "scaling", "AI solution", "digital", "modernize"]:
         register_observation(kw, "keyword", initial_weight=2.0, notes="High-intent signal keyword")
 
-    for kw in MEDIUM_INTENT_KEYWORDS:
+    for kw in ["technology", "software", "workflow", "upgrade", "growth"]:
         register_observation(kw, "keyword", initial_weight=1.0, notes="Medium-intent signal keyword")
-
-    # Register email templates
-    register_observation("email_diagnostic_report", "email_template", initial_weight=1.0, notes="Day 1 diagnostic report email")
-    register_observation("email_followup_1", "email_template", initial_weight=1.0, notes="Day 3 follow-up email")
-    register_observation("email_followup_2", "email_template", initial_weight=1.0, notes="Day 7 follow-up email")
-    register_observation("email_demo_invite", "email_template", initial_weight=1.0, notes="Post-engagement demo invite")
 
     # Register signal rules
     register_observation("rule_high_intent_threshold", "signal_rule", initial_weight=1.0, notes="Min keywords for high-intent classification")
-    register_observation("rule_medium_intent_threshold", "signal_rule", initial_weight=1.0, notes="Min keywords for medium-intent classification")
 
 
 # Seed on import

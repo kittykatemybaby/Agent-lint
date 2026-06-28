@@ -273,7 +273,7 @@ def run_full_audit() -> dict:
     all_findings.extend(audit_data_quality())
 
     # Pipeline health summary
-    from outreach.stop_conditions import pipeline_health as _ph
+    from stop_conditions import pipeline_health as _ph
     health = _ph()
 
     report = AuditReport(
