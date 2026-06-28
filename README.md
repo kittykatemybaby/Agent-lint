@@ -1,5 +1,7 @@
 # agent-lint
 
+![Dashboard](screenshot.png)
+
 **Predict before you break production.** One silent agent failure costs more than a year of monitoring.
 
 ```bash
