@@ -1,5 +1,9 @@
 # agent-lint
 
+[![CI](https://github.com/kittykatemybaby/Agent-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/kittykatemybaby/Agent-lint/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green.svg)]()
+
 ![Dashboard](screenshot.png)
 
 **Predict before you break production.** One silent agent failure costs more than a year of monitoring.
