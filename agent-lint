@@ -221,6 +221,12 @@ def main():
     predict_parser = sub.add_parser("predict", help="Predict outcome before execution")
     predict_parser.add_argument("path", help="Path to action JSON")
 
+    # intercept
+    intercept_parser = sub.add_parser("intercept", help="Pre-execution intercept — block before it runs")
+    intercept_parser.add_argument("tool", help="Tool type")
+    intercept_parser.add_argument("--params", default="{}", help="JSON params")
+    intercept_parser.add_argument("--rows", type=int, default=0)
+
     args = parser.parse_args()
 
     if args.command == "check":
@@ -238,6 +244,14 @@ def main():
     elif args.command == "predict":
         result = predict_outcome(args.path)
         print(json.dumps(result, indent=2, ensure_ascii=False))
+
+    elif args.command == "intercept":
+        from refutability import Action, refute_sync
+        action = Action(tool=args.tool, params={"rows": args.rows, **(json.loads(args.params))})
+        result = refute_sync(action)
+        print(f"{result.verdict.value.upper()} ({result.latency_ms}ms)")
+        for r in result.reasons: print(f"  - {r}")
+        if result.fix_suggestion: print(f"  Fix: {result.fix_suggestion}")
 
     else:
         parser.print_help()
