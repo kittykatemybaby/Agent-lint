@@ -27,19 +27,24 @@ def _get_deepseek_client():
 
 
 def embed_text(text: str) -> list[float] | None:
-    """Get embedding for a single text via DeepSeek API."""
+    """Get embedding. Uses local model ($0) first, falls back to API."""
+    # Local model — $0, fast, offline
+    try:
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("all-MiniLM-L6-v2", cache_folder="/opt/data/.cache/sbert")
+        return model.encode(text[:8000]).tolist()
+    except Exception:
+        pass
+    # Fallback: DeepSeek API
     try:
         client = _get_deepseek_client()
-        resp = client.post("/v1/embeddings", json={
-            "model": "deepseek-chat",
-            "input": text[:8000],
-        })
+        resp = client.post("/v1/embeddings", json={"model": "deepseek-chat", "input": text[:8000]})
         data = resp.json()
-        if "data" in data and len(data["data"]) > 0:
+        if data.get("data"):
             return data["data"][0]["embedding"]
-        return None
     except Exception:
-        return None
+        pass
+    return None
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
