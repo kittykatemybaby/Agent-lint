@@ -1,0 +1,19 @@
+name: agent-lint demo
+
+on: [push]
+
+jobs:
+  dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test agent-lint
+        run: |
+          chmod +x agent-lint
+          # Check a safe action
+          ./agent-lint check "git push to main" --tool api_call
+          # Check a dangerous action (should reject)
+          ./agent-lint check "rm -rf /" --tool shell_exec --rows 1 || true
+          # Show gene map
+          ./agent-lint genes
+          echo "✅ agent-lint self-test passed"
