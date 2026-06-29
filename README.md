@@ -131,16 +131,12 @@ All zero external dependencies. Pure Python 3.10+.
 ## Install
 
 ```bash
+# One-liner: scan your repo now
+bash <(curl -s https://raw.githubusercontent.com/kittykatemybaby/Agent-lint/master/quickstart.sh)
+
+# Or clone and run manually
 git clone https://github.com/kittykatemybaby/Agent-lint.git
-cd Agent-lint
-chmod +x agent-lint
-bash demo.sh
-```
-
-Or via pip from the repo:
-
-```bash
-pip install git+https://github.com/kittykatemybaby/Agent-lint.git
+cd Agent-lint && bash demo.sh
 ```
 
 ---
