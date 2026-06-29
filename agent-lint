@@ -25,41 +25,54 @@ TOOL_SPECS = {
         "reversible": False,
         "max_impact": 1000,  # max rows affected without escalation
         "risk_base": 0.3,
+        "allowed_callers": ["agent", "pipeline"],
+        "require_approval_above": 5000,
     },
     "http_post": {
         "reversible": False,
         "max_impact": 100,
         "risk_base": 0.4,
+        "allowed_callers": ["agent"],
+        "require_approval_above": 1000,
     },
     "email_send": {
         "reversible": False,
         "max_impact": 500,
         "risk_base": 0.2,
+        "allowed_callers": ["agent"],
+        "require_approval_above": 100,
     },
     "file_write": {
         "reversible": True,
         "max_impact": 10,
         "risk_base": 0.1,
+        "allowed_callers": ["*"],
     },
     "api_call": {
         "reversible": True,
         "max_impact": 100,
         "risk_base": 0.2,
+        "allowed_callers": ["*"],
     },
     "http_get": {
         "reversible": True,
         "max_impact": 1000,
         "risk_base": 0.1,
+        "allowed_callers": ["*"],
     },
     "http_delete": {
         "reversible": False,
         "max_impact": 10,
         "risk_base": 0.5,
+        "allowed_callers": ["agent"],
+        "require_approval_above": 1,
     },
     "shell_exec": {
         "reversible": False,
         "max_impact": 1,
         "risk_base": 0.6,
+        "allowed_callers": [],
+        "require_approval_above": 0,
     },
 }
 
