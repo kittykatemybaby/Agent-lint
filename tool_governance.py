@@ -200,6 +200,11 @@ TOOL_REGISTRY: dict[str, ToolSpec] = {
         auth_required=False,
         route_priority=2,
     ),
+    # ── External Services (plugin tier) ──
+    "apify": ToolSpec(name="apify", domain=ToolDomain.COLLECTION, tier=ToolTier.PLUGIN, output_format="json", rate_limit="paid", cost="paid", auth_required=True, route_priority=20),
+    "brandwatch": ToolSpec(name="brandwatch", domain=ToolDomain.SENTIMENT, tier=ToolTier.PLUGIN, output_format="json", rate_limit="paid", cost="paid", auth_required=True, route_priority=20),
+    "perplexity": ToolSpec(name="perplexity", domain=ToolDomain.VERIFICATION, tier=ToolTier.PLUGIN, output_format="text", rate_limit="paid", cost="paid", auth_required=True, route_priority=20),
+    "gemini": ToolSpec(name="gemini", domain=ToolDomain.REPORTING, tier=ToolTier.PLUGIN, output_format="json", rate_limit="paid", cost="paid", auth_required=True, route_priority=20),
 }
 
 
