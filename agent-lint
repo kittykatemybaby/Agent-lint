@@ -82,7 +82,7 @@ ERROR_GENES = {
 
 def classify_risk(action: str, tool: str, params: dict) -> dict:
     """Calculate risk score and recommendation for an agent action."""
-    spec = TOOL_SPECS.get(tool, {"reversible": False, "max_impact": 10, "risk_base": 0.3})
+    spec = TOOL_SPECS.get(tool, {"reversible": False, "max_impact": 1, "risk_base": 0.8})  # ponytail: default-deny unknown tools
     risk = spec["risk_base"]
 
     # Check patterns

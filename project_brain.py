@@ -24,6 +24,7 @@ BRAIN_DB = Path(__file__).parent / "project_brain.db"
 
 def _get_db() -> sqlite3.Connection:
     db = sqlite3.connect(str(BRAIN_DB))
+    db.execute("PRAGMA journal_mode=WAL")
     db.execute("""
         CREATE TABLE IF NOT EXISTS records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
