@@ -113,11 +113,22 @@ def correlate_signals(time_window_hours: int = 168) -> list[dict]:
                 "topic": t,
             })
 
-    # Find topics confirmed across 3+ layers
-    confirmed = []
+    # Find topics confirmed across 3+ layers. Merge co-occurring keywords.
+    merged = {}
     for topic, signals in topic_to_signals.items():
-        layers_hit = set(s["layer"] for s in signals)
-        if len(layers_hit) >= 3:
+        if len(signals) >= 2:
+            found = False
+            for existing in list(merged.keys()):
+                if topic in existing or existing in topic:
+                    merged[existing].extend(signals)
+                    found = True
+                    break
+            if not found:
+                merged[topic] = list(signals)
+
+    confirmed = []
+    for topic, signals in merged.items():
+            layers_hit = set(s["layer"] for s in signals)
             total_strength = sum(
                 s["signal_strength"] * LAYERS.get(s["layer"], {}).get("weight", 0.2)
                 for s in signals
